@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonebook Application</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        form input, form button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        form button:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .action-buttons button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .action-buttons button:hover {
+            background-color: #ddd;
+        }
+        .favorites {
+            background-color: #ffffcc;
+        }
+        .search-results li {
+            background-color: #e8f5e9;
+        }
+        .call-log, .relationships {
+            background-color: #e9f7fa;
+            padding: 10px;
+        }
+        .search-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        .search-button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Welcome Page Styling */
+        .welcome-container {
+            text-align: center;
+            padding: 50px;
+            background-color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .welcome-container img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            margin-top: 30px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+ <!-- Welcome Page -->
+<div id="welcomePage" class="welcome-container">
+    <h1>Welcome to Kai</h1> <!-- Changed text to "Welcome to Kai" -->
+    
+    <div class="button-container">
+        <button id="nextButton">Next</button>
+    </div>
+    
+    <!-- Place the image below the button -->
+    <img src="C:\Users\hp\Desktop\PhoneBook\Kiran_Ayesha" alt="Phonebook Image"> <!-- Image path updated -->
+</div>  -->
+
+
+    <!-- Phonebook Application Page -->
+    <div id="phonebookAppPage" class="container" style="display: none;">
+        <h1>Phonebook Application</h1>
+
+        <!-- Add Contact Form -->
+        <form id="addContactForm">
+            <input type="text" id="name" placeholder="Name" required><br>
+            <input type="text" id="phone" placeholder="Phone" required><br>
+            <input type="email" id="email" placeholder="Email"><br>
+            <input type="text" id="address" placeholder="Address"><br>
+            <input type="text" id="group" placeholder="Group"><br>
+            <label for="favorite">Favorite:</label>
+            <input type="checkbox" id="favorite"><br>
+            <button type="submit">Add Contact</button>
+        </form>
+
+        <!-- Contact List -->
+        <h2>Contact List</h2>
+        <ul id="contacts"></ul>
+
+        <!-- Search Contacts -->
+        <h2>Search Contacts</h2>
+        <input type="text" id="searchQuery" placeholder="Search by name...">
+        <button class="search-button" id="searchButton">Search</button>
+        <ul id="searchResults"></ul>
+
+        <!-- Favorites -->
+        <h2>Favorites</h2>
+        <ul id="favoriteList" class="favorites"></ul>
+
+        <!-- Call Log -->
+        <div class="call-log">
+            <h2>Call Log</h2>
+            <ul id="callLog"></ul>
+            <button id="logCallButton">Log Call for Contact</button>
+        </div>
+
+        <!-- Relationship Graph -->
+        <div class="relationships">
+            <h2>Relationship Graph</h2>
+            <ul id="relationshipGraph"></ul>
+            <button id="addRelationshipButton">Add Relationship</button>
+        </div>
+    </div>
+
+    <script>
+        // When the "Next" button is clicked, hide the welcome page and show the phonebook app
+        $('#nextButton').on('click', function() {
+            $('#welcomePage').hide();
+            $('#phonebookAppPage').show();
+        });
+
+        const apiUrl = 'http://127.0.0.1:5000'; // Your Flask API URL
+
+        // Load contacts
+        function loadContacts() {
+            $.ajax({
+                url: `${apiUrl}/contacts`,
+                type: 'GET',
+                success: function(response) {
+                    $('#contacts').empty();
+                    for (const name in response) {
+                        const contact = response[name];
+                        $('#contacts').append(`
+                            <li>
+                                ${name} - ${contact.phone} 
+                                <div class="action-buttons">
+                                    <button class="delete" data-name="${name}">Delete</button>
+                                    <button class="update" data-name="${name}">Update</button>
+                                </div>
+                            </li>
+                        `);
+                    }
+                    // Event listeners for Delete and Update buttons
+                    $('.delete').on('click', function() {
+                        const name = $(this).data('name');
+                        deleteContact(name);
+                    });
+
+                    $('.update').on('click', function() {
+                        const name = $(this).data('name');
+                        updateContact(name);
+                    });
+                }
+            });
+        }
+
+        // Add contact
+        $('#addContactForm').on('submit', function(event) {
+            event.preventDefault();
+            const newContact = {
+                name: $('#name').val(),
+                phone: $('#phone').val(),
+                email: $('#email').val(),
+                address: $('#address').val(),
+                group: $('#group').val(),
+                favorite: $('#favorite').is(':checked')
+            };
+            $.ajax({
+                url: `${apiUrl}/contacts`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newContact),
+                success: function(response) {
+                    alert(response.message);
+                    loadContacts();
+                },
+                error: function(error) {
+                    alert('Error adding contact: ' + error.responseJSON.error);
+                }
+            });
+        });
+
+        // Delete contact
+        function deleteContact(name) {
+            $.ajax({
+                url: `${apiUrl}/contacts/${name}`,
+                type: 'DELETE',
+                success: function(response) {
+                    alert(response.message);
+                    loadContacts();
+                },
+                error: function(error) {
+                    alert('Error deleting contact: ' + error.responseJSON.error);
+                }
+            });
+        }
+
+        // Search contacts
+        $('#searchButton').on('click', function() {
+            const query = $('#searchQuery').val();
+            $.ajax({
+                url: `${apiUrl}/contacts/search`,
+                type: 'GET',
+                data: { query },
+                success: function(response) {
+                    $('#searchResults').empty();
+                    for (const name in response) {
+                        $('#searchResults').append(`<li>${name} - ${response[name].phone}</li>`);
+                    }
+                }
+            });
+        });
+
+        // Load favorites
+        function loadFavorites() {
+            $.ajax({
+                url: `${apiUrl}/contacts/favorites`,
+                type: 'GET',
+                success: function(response) {
+                    $('#favoriteList').empty();
+                    for (const name in response) {
+                        $('#favoriteList').append(`<li>${name} - ${response[name].phone}</li>`);
+                    }
+                }
+            });
+        }
+
+        // Log a call for a contact
+        $('#logCallButton').on('click', function() {
+            const name = prompt('Enter contact name to log call:');
+            if (name) {
+                $.ajax({
+                    url: `${apiUrl}/call/${name}`,
+                    type: 'POST',
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(error) {
+                        alert('Error logging call: ' + error.responseJSON.error);
+                    }
+                });
+            }
+        });
+
+        // Load call log
+        function loadCallLog() {
+            $.ajax({
+                url: `${apiUrl}/call-log`,
+                type: 'GET',
+                success: function(response) {
+                    $('#callLog').empty();
+                    for (const name in response) {
+                        $('#callLog').append(`<li>${name} - ${response[name].join(', ')}</li>`);
+                    }
+                }
+            });
+        }
+
+        // Load relationship graph
+        function loadRelationshipGraph() {
+            $.ajax({
+                url: `${apiUrl}/contacts/graph`,
+                type: 'GET',
+                success: function(response) {
+                    $('#relationshipGraph').empty();
+                    for (const name in response) {
+                        $('#relationshipGraph').append(`
+                            <li>${name}: ${response[name].join(', ')}</li>
+                        `);
+                    }
+                }
+            });
+        }
+
+        // Add relationship between two contacts
+        $('#addRelationshipButton').on('click', function() {
+            const name1 = prompt('Enter the first contact name:');
+            const name2 = prompt('Enter the second contact name:');
+            if (name1 && name2) {
+                $.ajax({
+                    url: `${apiUrl}/contacts/relationship/${name1}/${name2}`,
+                    type: 'POST',
+                    success: function(response) {
+                        alert(response.message);
+                        loadRelationshipGraph();
+                    },
+                    error: function(error) {
+                        alert('Error adding relationship: ' + error.responseJSON.error);
+                    }
+                });
+            }
+        });
+
+        // Initialize all sections
+        $(document).ready(function() {
+            loadContacts();
+            loadFavorites();
+            loadCallLog();
+            loadRelationshipGraph();
+        });
+    </script>
+
+</body>
+</html>
+
